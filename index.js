@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const app = express();
+const Person = require('./models/person');
 
 morgan.token('body', (req, res) => JSON.stringify(req.body));
 
@@ -35,10 +37,6 @@ let persons = [
   },
 ];
 
-app.get('/', (request, response) => {
-  response.send('<h1>Phonebook backend</h1>');
-});
-
 app.get('/info', (request, response) => {
   response.send(`
     <div>
@@ -48,8 +46,11 @@ app.get('/info', (request, response) => {
   `);
 });
 
+// Fetches all persons in phonebook from DB
 app.get('/api/persons', (request, response) => {
-  response.json(persons);
+  Person.find({}).then((persons) => {
+    response.json(persons);
+  });
 });
 
 app.get('/api/persons/:id', (request, response) => {
@@ -100,7 +101,7 @@ app.delete('/api/persons/:id', (request, response) => {
   response.status(204).end();
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
