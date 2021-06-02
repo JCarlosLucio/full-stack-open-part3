@@ -64,10 +64,11 @@ app.get('/api/persons/:id', (request, response) => {
   }
 });
 
-const generateId = () => {
-  return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-};
+// const generateId = () => {
+//   return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+// };
 
+// Create new person and save it to DB
 app.post('/api/persons', (request, response) => {
   const body = request.body;
 
@@ -77,22 +78,22 @@ app.post('/api/persons', (request, response) => {
     });
   }
 
-  const isInPhonebook = persons.some((p) => p.name === body.name);
+  // const isInPhonebook = persons.some((p) => p.name === body.name);
 
-  if (isInPhonebook) {
-    return response.status(400).json({
-      error: 'name must be unique',
-    });
-  }
+  // if (isInPhonebook) {
+  //   return response.status(400).json({
+  //     error: 'name must be unique',
+  //   });
+  // }
 
-  const person = {
+  const person = new Person({
     name: body.name,
     number: body.number,
-    id: generateId(),
-  };
+  });
 
-  persons = [...persons, person];
-  response.json(person);
+  person.save().then((savedPerson) => {
+    response.json(savedPerson);
+  });
 });
 
 app.delete('/api/persons/:id', (request, response) => {
