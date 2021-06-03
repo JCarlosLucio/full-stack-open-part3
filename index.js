@@ -14,58 +14,44 @@ app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms :body')
 );
 
-let persons = [
-  {
-    name: 'Arto Hellas',
-    number: '040-123456',
-    id: 1,
-  },
-  {
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-    id: 2,
-  },
-  {
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-    id: 3,
-  },
-  {
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-    id: 4,
-  },
-];
-
-app.get('/info', (request, response) => {
-  response.send(`
-    <div>
-      <p>Phonebook has info for ${persons.length} people</p>
-      <p>${new Date()}</p>
-    </div>
-  `);
+// Displays info about Phonebook
+app.get('/info', (request, response, next) => {
+  Person.find({})
+    .then((persons) => {
+      response.send(`
+        <div>
+          <p>Phonebook has info for ${persons.length} people</p>
+          <p>${new Date()}</p>
+        </div>
+      `);
+    })
+    .catch((error) => next(error));
 });
 
 // Fetches all persons in phonebook from DB
-app.get('/api/persons', (request, response) => {
-  Person.find({}).then((persons) => {
-    response.json(persons);
-  });
+app.get('/api/persons', (request, response, next) => {
+  Person.find({})
+    .then((persons) => {
+      response.json(persons);
+    })
+    .catch((error) => next(error));
 });
 
-app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((p) => p.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+// Fetches individual person from DB
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
+      } else {
+        response.status(404).send({ error: 'Person not found' });
+      }
+    })
+    .catch((error) => next(error));
 });
 
-// Create new person and save it to DB
-app.post('/api/persons', (request, response) => {
+// Creates a new person and saves it to DB
+app.post('/api/persons', (request, response, next) => {
   const { name, number } = request.body;
 
   if (!name || !number) {
@@ -120,7 +106,7 @@ app.use(unknownEndpoint);
 const errorHandler = (error, request, response, next) => {
   console.log(error.message);
   if (error.name === 'CastError') {
-    response.status(400).send({ error: 'malformatted id' });
+    return response.status(400).send({ error: 'malformatted id' });
   }
   next(error);
 };
