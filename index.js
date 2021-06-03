@@ -64,36 +64,40 @@ app.get('/api/persons/:id', (request, response) => {
   }
 });
 
-// const generateId = () => {
-//   return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-// };
-
 // Create new person and save it to DB
 app.post('/api/persons', (request, response) => {
-  const body = request.body;
+  const { name, number } = request.body;
 
-  if (!body.name || !body.number) {
+  if (!name || !number) {
     return response.status(400).json({
       error: 'name or number missing',
     });
   }
 
-  // const isInPhonebook = persons.some((p) => p.name === body.name);
-
-  // if (isInPhonebook) {
-  //   return response.status(400).json({
-  //     error: 'name must be unique',
-  //   });
-  // }
-
   const person = new Person({
-    name: body.name,
-    number: body.number,
+    name,
+    number,
   });
 
-  person.save().then((savedPerson) => {
-    response.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => next(error));
+});
+
+// Updates a person in phonebook
+app.put('/api/persons/:id', (request, response, next) => {
+  const { name, number } = request.body;
+
+  const person = { name, number };
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedPerson) => {
+      response.json(updatedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 // Deletes a person in phonebook from DB
