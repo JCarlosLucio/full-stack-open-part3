@@ -97,16 +97,31 @@ app.post('/api/persons', (request, response) => {
 });
 
 // Deletes a person in phonebook from DB
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then((result) => {
       response.status(204).end();
     })
-    .catch((error) => {
-      console.log(error);
-      response.status(400).send({ error: 'malformatted id' });
-    });
+    .catch((error) => next(error));
 });
+
+// Middleware for handling unknown endpoints
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' });
+};
+
+app.use(unknownEndpoint);
+
+// Middleware for handling errors
+const errorHandler = (error, request, response, next) => {
+  console.log(error.message);
+  if (error.name === 'CastError') {
+    response.status(400).send({ error: 'malformatted id' });
+  }
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
